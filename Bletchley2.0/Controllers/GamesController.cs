@@ -1,0 +1,143 @@
+﻿using Bletchley2._0.Data;
+using Bletchley2._0.Models;
+using Bletchley2._0.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace Bletchley2._0.Controllers
+{
+    [Authorize]
+    public class GamesController : Controller
+    {
+        private readonly ApplicationDbContext _db;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly GameService _gameService;
+
+        public GamesController(ApplicationDbContext db,
+                               UserManager<IdentityUser> userManager,
+                               GameService gameService)
+        {
+            _db = db;
+            _userManager = userManager;
+            _gameService = gameService;
+        }
+
+        // Landing page
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        // Start a brand new game
+        public async Task<IActionResult> Start()
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var game = new Game
+            {
+                UserId = userId!,
+                SecretCode = _gameService.GenerateSecretCode(),
+                PlayedAt = DateTime.Now
+            };
+
+            _db.Games.Add(game);
+            await _db.SaveChangesAsync();
+
+            return RedirectToAction("Play", new { id = game.Id });
+        }
+
+        // Show the game board
+        public async Task<IActionResult> Play(int id)
+        {
+            var game = await _db.Games
+                .Include(g => g.User)
+                .FirstOrDefaultAsync(g => g.Id == id);
+
+            if (game == null) return NotFound();
+
+            // Security: only the owner can play
+            var userId = _userManager.GetUserId(User);
+            if (game.UserId != userId) return Forbid();
+
+            var guesses = await _db.Guesses
+                .Where(g => g.GameId == id)
+                .OrderBy(g => g.AttemptNumber)
+                .ToListAsync();
+
+            ViewBag.Guesses = guesses;
+            return View(game);
+        }
+
+        // Handle a guess submission
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitGuess(int gameId, string guessInput)
+        {
+            var game = await _db.Games.FindAsync(gameId);
+
+            if (game == null || game.IsCompleted)
+                return RedirectToAction("Play", new { id = gameId });
+
+            // Validate input: 4 unique numbers 0–7 separated by spaces
+            var parts = guessInput?.Trim().Split(' ',
+                StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+
+            bool valid = parts.Length == 4
+                && parts.All(p => int.TryParse(p, out int n) && n >= 0 && n <= 7)
+                && parts.Distinct().Count() == 4;
+
+            if (!valid)
+            {
+                TempData["Error"] = "Please enter 4 unique numbers between 0 and 7, separated by spaces. Example: 3 1 5 7";
+                return RedirectToAction("Play", new { id = gameId });
+            }
+
+            game.Attempts++;
+
+            var (knownNums, knownPos) = _gameService.CheckGuess(
+                game.SecretCode, string.Join(" ", parts));
+
+            _db.Guesses.Add(new Guess
+            {
+                GameId = gameId,
+                GuessCode = string.Join(" ", parts),
+                KnownNumbers = knownNums,
+                KnownPositions = knownPos,
+                AttemptNumber = game.Attempts
+            });
+
+            if (knownPos == 4)
+            {
+                game.IsCompleted = true;
+                game.IsWon = true;
+                game.Score = _gameService.CalculateScore(game.Attempts);
+            }
+            else if (game.Attempts >= 13)
+            {
+                game.IsCompleted = true;
+                game.IsWon = false;
+                game.Score = 0;
+            }
+
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Play", new { id = gameId });
+        }
+
+        // Ranking / leaderboard
+        [AllowAnonymous]
+        public async Task<IActionResult> Ranking()
+        {
+            var results = await _db.Games
+                .Include(g => g.User)
+                .Where(g => g.IsCompleted)
+                .OrderByDescending(g => g.Score)
+                .ThenBy(g => g.Attempts)
+                .ThenBy(g => g.PlayedAt)
+                .ToListAsync();
+
+            return View(results);
+        }
+    }
+}
