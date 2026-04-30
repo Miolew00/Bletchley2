@@ -12,6 +12,6 @@ namespace Bletchley2._0.Models
         public bool IsCompleted { get; set; } = false;
         public bool IsWon { get; set; } = false;
         public int Score { get; set; } = 0;
-        public DateTime PlayedAt { get; set; } = DateTime.Now;
+        public DateTime PlayedAt { get; set; } = DateTime.Now; // Track when the game was played
     }
 }
