@@ -1,0 +1,265 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - Mastermind</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .auth-card {
+            background-color: #16213e;
+            border-radius: 20px;
+            overflow: hidden;
+            width: 900px;
+            max-width: 95vw;
+            min-height: 540px;
+            display: flex;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+        }
+
+        .auth-left {
+            flex: 1;
+            background: linear-gradient(160deg, #6a0dad, #3b0086, #1a1a4e);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .auth-left-overlay {
+            position: absolute;
+            inset: 0;
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&q=80') center/cover;
+            opacity: 0.25;
+        }
+
+        .auth-left-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-logo {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: white;
+            letter-spacing: 2px;
+        }
+
+        .auth-left-text {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .auth-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .auth-dot {
+            width: 28px;
+            height: 4px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 2px;
+        }
+
+            .auth-dot.active {
+                background: white;
+            }
+
+        .auth-right {
+            flex: 1.2;
+            background-color: #1e1e2e;
+            padding: 50px 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+            .auth-right h1 {
+                color: white;
+                font-size: 2rem;
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+            .subtitle a {
+                color: #a78bfa;
+                text-decoration: none;
+            }
+
+                .subtitle a:hover {
+                    text-decoration: underline;
+                }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-control-auth {
+            width: 100%;
+            background-color: #2a2a3e;
+            border: 1px solid #3a3a5c;
+            border-radius: 10px;
+            color: white;
+            padding: 14px 16px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+            .form-control-auth:focus {
+                border-color: #7c3aed;
+            }
+
+            .form-control-auth::placeholder {
+                color: #555;
+            }
+
+        .btn-register {
+            width: 100%;
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            transition: opacity 0.2s;
+        }
+
+            .btn-register:hover {
+                opacity: 0.9;
+            }
+
+        .validation-error {
+            color: #f87171;
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+            .back-link:hover {
+                background: rgba(255,255,255,0.25);
+                color: white;
+            }
+
+        @@media (max-width: 650px) {
+            .auth-left {
+                display: none;
+            }
+
+            .auth-right {
+                padding: 30px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+
+        <div class="auth-left">
+            <div class="auth-left-overlay"></div>
+            <a href="/" class="back-link">Назад към сайта →</a>
+            <div class="auth-left-content">
+                <div class="auth-logo">🔐 MASTERMIND</div>
+            </div>
+            <div class="auth-left-content">
+                <div class="auth-left-text">Разбий кода.<br />Спечели славата.</div>
+                <div class="auth-dots mt-3">
+                    <div class="auth-dot"></div>
+                    <div class="auth-dot"></div>
+                    <div class="auth-dot active"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-right">
+            <h1>Създай акаунт</h1>
+            <p class="subtitle">Вече имаш акаунт? <a asp-page="./Login">Влез тук</a></p>
+
+            <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <div asp-validation-summary="ModelOnly" class="validation-error mb-3"></div>
+
+                <div class="form-group">
+                    <input asp-for="Input.Email"
+                           class="form-control-auth"
+                           placeholder="Имейл адрес"
+                           autocomplete="email" />
+                    <span asp-validation-for="Input.Email" class="validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <input asp-for="Input.Password"
+                           class="form-control-auth"
+                           placeholder="Парола"
+                           type="password"
+                           autocomplete="new-password" />
+                    <span asp-validation-for="Input.Password" class="validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <input asp-for="Input.ConfirmPassword"
+                           class="form-control-auth"
+                           placeholder="Потвърди паролата"
+                           type="password"
+                           autocomplete="new-password" />
+                    <span asp-validation-for="Input.ConfirmPassword" class="validation-error"></span>
+                </div>
+
+                <button type="submit" class="btn-register">СЪЗДАЙ АКАУНТ</button>
+            </form>
+        </div>
+
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

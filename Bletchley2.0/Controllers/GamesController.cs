@@ -24,13 +24,11 @@ namespace Bletchley2._0.Controllers
             _gameService = gameService;
         }
 
-        // Landing page
         public IActionResult Index()
         {
             return View();
         }
 
-        // Start a brand new game
         public async Task<IActionResult> Start()
         {
             var userId = _userManager.GetUserId(User);
@@ -48,7 +46,6 @@ namespace Bletchley2._0.Controllers
             return RedirectToAction("Play", new { id = game.Id });
         }
 
-        // Show the game board
         public async Task<IActionResult> Play(int id)
         {
             var game = await _db.Games
@@ -57,7 +54,6 @@ namespace Bletchley2._0.Controllers
 
             if (game == null) return NotFound();
 
-            // Security: only the owner can play
             var userId = _userManager.GetUserId(User);
             if (game.UserId != userId) return Forbid();
 
@@ -70,7 +66,6 @@ namespace Bletchley2._0.Controllers
             return View(game);
         }
 
-        // Handle a guess submission
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitGuess(int gameId, string guessInput)
@@ -80,9 +75,14 @@ namespace Bletchley2._0.Controllers
             if (game == null || game.IsCompleted)
                 return RedirectToAction("Play", new { id = gameId });
 
-            // Validate input: 4 unique numbers 0–7 separated by spaces
-            var parts = guessInput?.Trim().Split(' ',
-                StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            var cleaned = (guessInput ?? "")
+                .Trim()
+                .Replace(",", " ")
+                .Replace("-", " ")
+                .Replace(".", " ");
+
+            var parts = cleaned.Split(new char[] { ' ' },
+                StringSplitOptions.RemoveEmptyEntries);
 
             bool valid = parts.Length == 4
                 && parts.All(p => int.TryParse(p, out int n) && n >= 0 && n <= 7)
@@ -90,7 +90,7 @@ namespace Bletchley2._0.Controllers
 
             if (!valid)
             {
-                TempData["Error"] = "Please enter 4 unique numbers between 0 and 7, separated by spaces. Example: 3 1 5 7";
+                TempData["Error"] = "Въведи 4 уникални числа от 0 до 7! Пример: 3 1 5 7";
                 return RedirectToAction("Play", new { id = gameId });
             }
 
@@ -125,7 +125,6 @@ namespace Bletchley2._0.Controllers
             return RedirectToAction("Play", new { id = gameId });
         }
 
-        // Ranking / leaderboard
         [AllowAnonymous]
         public async Task<IActionResult> Ranking()
         {

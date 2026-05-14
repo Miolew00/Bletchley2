@@ -7,23 +7,78 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Bletchley2._0.styles.css" asp-append-version="true" />
+    <style>
+        body {
+            background-color: #1a1a2e;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: #16213e !important;
+            border-bottom: 1px solid #3a3a5c !important;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: 900;
+            letter-spacing: 2px;
+            font-size: 1.2rem;
+        }
+
+        .nav-link {
+            color: #a78bfa !important;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+            .nav-link:hover {
+                color: white !important;
+            }
+
+        .navbar-toggler {
+            border-color: #3a3a5c;
+        }
+
+        .footer {
+            background-color: #16213e !important;
+            border-top: 1px solid #3a3a5c !important;
+            color: #888 !important;
+        }
+
+            .footer a {
+                color: #a78bfa;
+                text-decoration: none;
+            }
+
+                .footer a:hover {
+                    color: white;
+                }
+        /* Login/Register linkovi v navbar */
+        .nav-link.text-dark {
+            color: #a78bfa !important;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Bletchley2._0</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">🔐 MASTERMIND</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" asp-controller="Games" asp-action="Index">🎮 Game</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Games" asp-action="Ranking">🏆 Ranking</a>
                         </li>
                     </ul>
                     <partial name="_LoginPartial" />
@@ -31,17 +86,19 @@
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Bletchley2._0 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top footer mt-4 py-3">
+        <div class="container text-center">
+            &copy; 2026 - 🔐 Mastermind - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

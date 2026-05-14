@@ -1,0 +1,60 @@
+﻿@{
+    ViewData["Title"] = "Mastermind";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 text-center">
+
+            <div class="mb-4">
+                <h1 class="display-4 fw-bold">🔐 Mastermind</h1>
+                <p class="lead text-muted">Can you crack the secret 4-digit code?</p>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-3">How to Play</h5>
+                    <ul class="list-group list-group-flush text-start">
+                        <li class="list-group-item">🎲 The computer picks <strong>4 unique numbers</strong> from 0–7</li>
+                        <li class="list-group-item">🔢 Enter your guess separated by spaces (e.g. <code>3 1 5 7</code>)</li>
+                        <li class="list-group-item">✅ <strong>Known numbers</strong> = right number, wrong position</li>
+                        <li class="list-group-item">🎯 <strong>Known positions</strong> = right number, right position</li>
+                        <li class="list-group-item">⚠️ Maximum <strong>13 attempts</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-3">🏆 Score System</h5>
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="badge bg-success fs-6 p-2 w-100">20 pts</div>
+                            <div class="small mt-1">1–3 tries</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="badge bg-primary fs-6 p-2 w-100">10 pts</div>
+                            <div class="small mt-1">4–7 tries</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="badge bg-warning text-dark fs-6 p-2 w-100">5 pts</div>
+                            <div class="small mt-1">8–10 tries</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="badge bg-secondary fs-6 p-2 w-100">3 pts</div>
+                            <div class="small mt-1">11–13 tries</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <a asp-controller="Games" asp-action="Start" class="btn btn-dark btn-lg px-5 me-2">
+                🎮 Start Game
+            </a>
+            <a asp-controller="Games" asp-action="Ranking" class="btn btn-outline-secondary btn-lg px-4">
+                🏆 Ranking
+            </a>
+
+        </div>
+    </div>
+</div>
