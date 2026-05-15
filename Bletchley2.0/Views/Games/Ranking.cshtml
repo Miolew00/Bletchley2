@@ -3,111 +3,335 @@
     ViewData["Title"] = "Ranking";
 }
 
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+<style>
+    .ranking-title {
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #a78bfa, #7c3aed, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold mb-0">🏆 Leaderboard</h2>
-                <a asp-action="Index" class="btn btn-dark">🎮 Play</a>
-            </div>
+    .ranking-table-wrapper {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 1px solid #3a3a5c;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 0 40px rgba(124, 58, 237, 0.15);
+    }
 
-            @if (!Model.Any())
-            {
-                <div class="alert alert-info text-center">
-                    No games played yet. Be the first to crack the code!
-                </div>
+    .ranking-header {
+        background: linear-gradient(135deg, #2d1b69, #1e1b4b);
+        padding: 16px 24px;
+        display: grid;
+        grid-template-columns: 80px 1fr 120px 100px 100px 120px;
+        color: #a78bfa;
+        font-weight: 700;
+        font-size: 0.85rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .ranking-row {
+        padding: 18px 24px;
+        display: grid;
+        grid-template-columns: 80px 1fr 120px 100px 100px 120px;
+        align-items: center;
+        border-top: 1px solid #1e1e3a;
+        transition: background 0.2s, transform 0.15s;
+        position: relative;
+    }
+
+        .ranking-row:hover {
+            background: rgba(124, 58, 237, 0.1);
+            transform: translateX(4px);
+        }
+
+        .ranking-row.gold {
+            background: linear-gradient(90deg, rgba(234,179,8,0.12), transparent);
+        }
+
+            .ranking-row.gold:hover {
+                background: linear-gradient(90deg, rgba(234,179,8,0.2), rgba(124,58,237,0.1));
             }
-            else
-            {
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th class="text-center">Rank</th>
-                                    <th>Player</th>
-                                    <th class="text-center">Attempts</th>
-                                    <th class="text-center">Score</th>
-                                    <th class="text-center">Result</th>
-                                    <th class="text-center">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (int i = 0; i < Model.Count; i++)
-                                {
-                                    var game = Model[i];
-                                    <tr class="@(i == 0 ? "table-warning" : i == 1 ? "table-light" : "")">
-                                        <td class="text-center fw-bold">
-                                            @if (i == 0)
-                                            {
-                                                <span>🥇</span>
-                                            }
-                                            else if (i == 1)
-                                            {
 
-                                                <span>🥈</span>
-                                            }
-                                            else if (i == 2)
-                                            {
+        .ranking-row.silver {
+            background: linear-gradient(90deg, rgba(148,163,184,0.1), transparent);
+        }
 
-                                                <span>🥉</span>
-                                            }
-                                            else
-                                            {
+        .ranking-row.bronze {
+            background: linear-gradient(90deg, rgba(180,120,60,0.1), transparent);
+        }
 
-                                                <span class="text-muted">@(i + 1)</span>
-                                            }
-                                        </td>
-                                        <td class="fw-semibold">@game.User?.UserName</td>
-                                        <td class="text-center">
-                                            @if (game.IsWon)
-                                            {
-                                                <span>@game.Attempts</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-danger">13 ❌</span>
-                                            }
-                                        </td>
-                                        <td class="text-center">
-                                            @if (game.Score >= 20)
-                                            {
-                                                <span class="badge bg-success fs-6">@game.Score</span>
-                                            }
-                                            else if (game.Score >= 10)
-                                            {
-                                                <span class="badge bg-primary fs-6">@game.Score</span>
-                                            }
-                                            else if (game.Score >= 5)
-                                            {
-                                                <span class="badge bg-warning text-dark fs-6">@game.Score</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-secondary fs-6">@game.Score</span>
-                                            }
-                                        </td>
-                                        <td class="text-center">
-                                            @if (game.IsWon)
-                                            {
-                                                <span class="badge bg-success">Won</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-danger">Lost</span>
-                                            }
-                                        </td>
-                                        <td class="text-center text-muted small">
-                                            @game.PlayedAt.ToString("dd MMM yyyy")
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+    .rank-num {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .player-name {
+        color: white;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .player-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-right: 10px;
+    }
+
+    .attempts-cell {
+        color: #94a3b8;
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    .score-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    .score-20 {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: white;
+        box-shadow: 0 0 12px rgba(16,185,129,0.4);
+    }
+
+    .score-10 {
+        background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+        color: white;
+        box-shadow: 0 0 12px rgba(59,130,246,0.4);
+    }
+
+    .score-5 {
+        background: linear-gradient(135deg, #d97706, #f59e0b);
+        color: white;
+        box-shadow: 0 0 12px rgba(245,158,11,0.4);
+    }
+
+    .score-3 {
+        background: linear-gradient(135deg, #475569, #64748b);
+        color: white;
+    }
+
+    .result-won {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: white;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .result-lost {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        color: white;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .date-cell {
+        color: #64748b;
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
+    .glow-line {
+        height: 3px;
+        background: linear-gradient(90deg, #7c3aed, #ec4899, #7c3aed);
+        background-size: 200% 100%;
+        animation: shimmer 2s linear infinite;
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    .pulse-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        margin-right: 6px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.5;
+            transform: scale(0.8);
+        }
+    }
+
+    .btn-play {
+        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 24px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: opacity 0.2s, transform 0.15s;
+        display: inline-block;
+    }
+
+        .btn-play:hover {
+            opacity: 0.85;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #64748b;
+    }
+
+    .floating {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-8px);
+        }
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+
+            <!-- ЗАГЛАВИЕ -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <div class="ranking-title">🏆 Leaderboard</div>
+                    <div style="color:#64748b;font-size:.85rem;margin-top:4px;">
+                        <span class="pulse-dot"></span>
+                        @Model.Count резултата
                     </div>
                 </div>
-            }
+                <a asp-controller="Games" asp-action="Start" class="btn-play">🎮 Play</a>
+            </div>
+
+            <!-- ТАБЛИЦА -->
+            <div class="ranking-table-wrapper">
+                <div class="glow-line"></div>
+
+                @if (!Model.Any())
+                {
+                    <div class="empty-state">
+                        <div class="floating" style="font-size:4rem;">🎮</div>
+                        <h4 style="color:#94a3b8;margin-top:16px;">Все още няма резултати</h4>
+                        <p>Бъди първият, който разбива кода!</p>
+                        <a asp-controller="Games" asp-action="Start" class="btn-play mt-2">Започни сега</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="ranking-header">
+                        <div>Rank</div>
+                        <div>Player</div>
+                        <div style="text-align:center;">Attempts</div>
+                        <div style="text-align:center;">Score</div>
+                        <div style="text-align:center;">Result</div>
+                        <div style="text-align:center;">Date</div>
+                    </div>
+
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var game = Model[i];
+                        string rowClass = i == 0 ? "gold" : i == 1 ? "silver" : i == 2 ? "bronze" : "";
+                        string firstLetter = (game.User?.UserName ?? "?").Substring(0, 1).ToUpper();
+                        string scoreClass = game.Score >= 20 ? "score-20" : game.Score >= 10 ? "score-10" : game.Score >= 5 ? "score-5" : "score-3";
+
+                        <div class="ranking-row @rowClass">
+                            <div class="rank-num">
+                                @if (i == 0)
+                                {
+                                    <span>🥇</span>
+                                }
+                                else if (i == 1)
+                                {
+
+                                    <span>🥈</span>
+                                }
+                                else if (i == 2)
+                                {
+
+                                    <span>🥉</span>
+                                }
+                                else
+                                {
+
+                                    <span style="color:#64748b;font-size:1rem;">@(i + 1)</span>
+                                }
+                            </div>
+                            <div style="display:flex;align-items:center;">
+                                <div class="player-avatar">@firstLetter</div>
+                                <div class="player-name">@game.User?.UserName</div>
+                            </div>
+                            <div class="attempts-cell">
+                                @if (game.IsWon)
+                                {
+                                    <span>@game.Attempts</span>
+                                }
+                                else
+                                {
+                                    <span style="color:#ef4444;">13 ❌</span>
+                                }
+                            </div>
+                            <div style="text-align:center;">
+                                <span class="score-badge @scoreClass">@game.Score</span>
+                            </div>
+                            <div style="text-align:center;">
+                                @if (game.IsWon)
+                                {
+                                    <span class="result-won">Won</span>
+                                }
+                                else
+                                {
+                                    <span class="result-lost">Lost</span>
+                                }
+                            </div>
+                            <div class="date-cell">@game.PlayedAt.ToString("dd MMM yyyy")</div>
+                        </div>
+                    }
+                }
+
+                <div class="glow-line"></div>
+            </div>
 
         </div>
     </div>

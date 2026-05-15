@@ -57,8 +57,8 @@
         border: 2px solid #3a3a3c !important;
         color: white !important;
         text-align: center;
-        font-size: 1.4rem;
-        letter-spacing: 8px;
+        font-size: 1.8rem;
+        letter-spacing: 12px;
         border-radius: 8px;
     }
 
@@ -69,6 +69,8 @@
 
         .form-control-dark::placeholder {
             color: #818384;
+            letter-spacing: 4px;
+            font-size: 1.2rem;
         }
 
     .btn-green {
@@ -147,16 +149,17 @@
                 }
 
                 <div class="card-dark p-4 mb-4">
-                    <p style="color:#818384;" class="mb-3 small">Въведи 4 уникални числа от 0 до 7, разделени с интервал</p>
+                    <p style="color:#818384;" class="mb-3 small">Пиши цифрите — интервалите се добавят автоматично</p>
                     <form method="post" action="/Games/SubmitGuess">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="gameId" value="@Model.Id" />
                         <div class="mb-3">
                             <input type="text"
+                                   id="guessInput"
                                    name="guessInput"
                                    class="form-control form-control-lg form-control-dark"
-                                   placeholder="3 1 5 7"
-                                   maxlength="15"
+                                   placeholder="_ _ _ _"
+                                   maxlength="7"
                                    autocomplete="off"
                                    autofocus
                                    required />
@@ -220,3 +223,42 @@
         </div>
     </div>
 </div>
+
+<script>
+    const input = document.getElementById('guessInput');
+    if (input) {
+        input.addEventListener('input', function () {
+            // Запази позицията на курсора
+            let pos = this.selectionStart;
+
+            // Вземи само цифрите
+            let digits = this.value.replace(/[^0-9]/g, '');
+
+            // Ограничи до 4 цифри
+            if (digits.length > 4) {
+                digits = digits.substring(0, 4);
+            }
+
+            // Добави интервал между цифрите автоматично
+            let formatted = digits.split('').join(' ');
+            this.value = formatted;
+
+            // Ако са въведени 4 цифри — фокусирай бутона
+            if (digits.length === 4) {
+                document.querySelector('.btn-green').focus();
+            }
+        });
+
+        // Enter = submit
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                this.closest('form').submit();
+            }
+            // Блокирай всичко освен цифри, backspace, delete, стрелки
+            const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+            if (!allowed.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+</script>
