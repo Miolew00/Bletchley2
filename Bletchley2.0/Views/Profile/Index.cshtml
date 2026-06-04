@@ -1,0 +1,181 @@
+﻿@model Bletchley2._0.Models.UserProfile
+@{
+    ViewData["Title"] = "Моят профил";
+}
+
+<style>
+    .profile-card {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 1px solid #3a3a5c;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 0 40px rgba(124,58,237,0.15);
+    }
+
+    .avatar-wrapper {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .avatar-img {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #7c3aed;
+        box-shadow: 0 0 30px rgba(124,58,237,0.4);
+        transition: opacity 0.3s;
+    }
+
+    .avatar-wrapper:hover .avatar-img {
+        opacity: 0.7;
+    }
+
+    .avatar-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: rgba(124,58,237,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 2rem;
+    }
+
+    .avatar-wrapper:hover .avatar-overlay {
+        opacity: 1;
+    }
+
+    .username {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-top: 16px;
+    }
+
+    .upload-btn {
+        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 28px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+        .upload-btn:hover {
+            opacity: 0.85;
+        }
+
+    .glow-line {
+        height: 3px;
+        background: linear-gradient(90deg, #7c3aed, #ec4899, #7c3aed);
+        background-size: 200%;
+        animation: shimmer 2s linear infinite;
+        border-radius: 2px;
+        margin: 24px 0;
+    }
+
+    .points-box {
+        background: linear-gradient(135deg, #2d1b69, #1e1b4b);
+        border: 1px solid #7c3aed;
+        border-radius: 12px;
+        padding: 16px 24px;
+        margin: 16px 0;
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="profile-card text-center">
+
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert mb-4" style="background:#059669;color:white;border:none;border-radius:10px;">
+                        ✅ @TempData["Success"]
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert mb-4" style="background:#dc2626;color:white;border:none;border-radius:10px;">
+                        ⚠️ @TempData["Error"]
+                    </div>
+                }
+
+                <form method="post" asp-action="UploadPicture" enctype="multipart/form-data" id="uploadForm">
+                    <div class="avatar-wrapper" onclick="document.getElementById('fileInput').click()">
+                        <img src="@Model.ProfilePicturePath"
+                             class="avatar-img"
+                             id="previewImg"
+                             alt="Profile Picture"
+                             onerror="this.src='/images/default-avatar.png'" />
+                        <div class="avatar-overlay">📷</div>
+                    </div>
+                    <input type="file"
+                           id="fileInput"
+                           name="profilePicture"
+                           accept="image/*"
+                           style="display:none;"
+                           onchange="previewAndUpload(this)" />
+                </form>
+
+                <div class="username">@User.Identity?.Name</div>
+
+                <div class="glow-line"></div>
+
+                <div class="points-box">
+                    <div style="color:#a78bfa;font-size:.85rem;margin-bottom:4px;">ОБЩО ТОЧКИ</div>
+                    <div style="color:white;font-size:2rem;font-weight:900;">💎 @Model.TotalPoints</div>
+                    @if (Model.TotalPoints >= 30)
+                    {
+                        <div style="color:#10b981;font-size:.85rem;margin-top:4px;">✅ Имаш hint наличен!</div>
+                    }
+                    else
+                    {
+                        <div style="color:#64748b;font-size:.85rem;margin-top:4px;">
+                            Нужни са още @(30 - Model.TotalPoints) точки за hint
+                        </div>
+                    }
+                </div>
+
+                <p style="color:#64748b;font-size:.9rem;margin-top:16px;">
+                    Кликни върху снимката за да я смениш.<br />
+                    JPG, PNG, GIF, WEBP — макс. 2MB
+                </p>
+
+                <button onclick="document.getElementById('fileInput').click()" class="upload-btn">
+                    📷 Смени снимката
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewAndUpload(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('previewImg').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+            document.getElementById('uploadForm').submit();
+        }
+    }
+</script>

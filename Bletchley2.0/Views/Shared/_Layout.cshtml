@@ -54,9 +54,19 @@
                 .footer a:hover {
                     color: white;
                 }
-        /* Login/Register linkovi v navbar */
+
         .nav-link.text-dark {
             color: #a78bfa !important;
+        }
+
+        .nav-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #7c3aed;
+            margin-right: 6px;
+            vertical-align: middle;
         }
     </style>
 </head>
@@ -80,25 +90,28 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Games" asp-action="Ranking">🏆 Ranking</a>
                         </li>
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Profile" asp-action="Index">👤 Профил</a>
+                            </li>
+                        }
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
     </header>
-
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
-
     <footer class="border-top footer mt-4 py-3">
         <div class="container text-center">
             &copy; 2026 - 🔐 Mastermind - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

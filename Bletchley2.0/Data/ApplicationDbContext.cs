@@ -11,5 +11,6 @@ namespace Bletchley2._0.Data
 
         public DbSet<Game> Games { get; set; }
         public DbSet<Guess> Guesses { get; set; }
+        public DbSet<UserProfile> UserProfiles { get; set; }
     }
 }
