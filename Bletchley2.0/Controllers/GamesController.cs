@@ -15,6 +15,8 @@ namespace Bletchley2._0.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly GameService _gameService;
 
+        private const int HintCost = 30;
+
         public GamesController(ApplicationDbContext db,
                                UserManager<IdentityUser> userManager,
                                GameService gameService)
@@ -22,6 +24,29 @@ namespace Bletchley2._0.Controllers
             _db = db;
             _userManager = userManager;
             _gameService = gameService;
+        }
+
+        private async Task<UserProfile> GetOrCreateProfileAsync()
+        {
+            string userId = _userManager.GetUserId(User) ?? "";
+
+            var profile = await _db.UserProfiles
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (profile == null)
+            {
+                profile = new UserProfile
+                {
+                    UserId = userId,
+                    ProfilePicturePath = "/images/default-avatar.png",
+                    TotalPoints = 0
+                };
+
+                _db.UserProfiles.Add(profile);
+                await _db.SaveChangesAsync();
+            }
+
+            return profile;
         }
 
         public IActionResult Index()
@@ -52,17 +77,32 @@ namespace Bletchley2._0.Controllers
                 .Include(g => g.User)
                 .FirstOrDefaultAsync(g => g.Id == id);
 
-            if (game == null) return NotFound();
+            if (game == null)
+            {
+                return NotFound();
+            }
 
             var userId = _userManager.GetUserId(User);
-            if (game.UserId != userId) return Forbid();
+
+            if (game.UserId != userId)
+            {
+                return Forbid();
+            }
 
             var guesses = await _db.Guesses
                 .Where(g => g.GameId == id)
                 .OrderBy(g => g.AttemptNumber)
                 .ToListAsync();
 
+            var profile = await GetOrCreateProfileAsync();
+
             ViewBag.Guesses = guesses;
+
+            // Това е важно за hint бутона
+            ViewBag.TotalPoints = profile.TotalPoints;
+            ViewBag.CanUseHint = profile.TotalPoints >= HintCost;
+            ViewBag.HintCost = HintCost;
+
             return View(game);
         }
 
@@ -72,8 +112,22 @@ namespace Bletchley2._0.Controllers
         {
             var game = await _db.Games.FindAsync(gameId);
 
-            if (game == null || game.IsCompleted)
+            if (game == null)
+            {
+                return NotFound();
+            }
+
+            var userId = _userManager.GetUserId(User);
+
+            if (game.UserId != userId)
+            {
+                return Forbid();
+            }
+
+            if (game.IsCompleted)
+            {
                 return RedirectToAction("Play", new { id = gameId });
+            }
 
             var cleaned = (guessInput ?? "")
                 .Trim()
@@ -113,16 +167,75 @@ namespace Bletchley2._0.Controllers
                 game.IsCompleted = true;
                 game.IsWon = true;
                 game.Score = _gameService.CalculateScore(game.Attempts);
+
+                // ТОВА ТИ ЛИПСВАШЕ
+                var profile = await GetOrCreateProfileAsync();
+                profile.TotalPoints += game.Score;
+
+                TempData["Success"] = $"Браво! Победи и спечели {game.Score} точки!";
             }
             else if (game.Attempts >= 13)
             {
                 game.IsCompleted = true;
                 game.IsWon = false;
                 game.Score = 0;
+
+                TempData["Error"] = $"Загуби! Тайният код беше: {game.SecretCode}";
             }
 
             await _db.SaveChangesAsync();
+
             return RedirectToAction("Play", new { id = gameId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UseHint(int id)
+        {
+            var game = await _db.Games.FindAsync(id);
+
+            if (game == null)
+            {
+                return NotFound();
+            }
+
+            var userId = _userManager.GetUserId(User);
+
+            if (game.UserId != userId)
+            {
+                return Forbid();
+            }
+
+            if (game.IsCompleted)
+            {
+                TempData["Error"] = "Играта вече е приключила.";
+                return RedirectToAction("Play", new { id = game.Id });
+            }
+
+            var profile = await GetOrCreateProfileAsync();
+
+            if (profile.TotalPoints < HintCost)
+            {
+                TempData["Error"] = "Нямаш достатъчно точки за hint.";
+                return RedirectToAction("Play", new { id = game.Id });
+            }
+
+            profile.TotalPoints -= HintCost;
+
+            string[] codeParts = game.SecretCode.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            if (codeParts.Length >= 4)
+            {
+                TempData["Hint"] = $"Hint: първата цифра е {codeParts[0]}";
+            }
+            else
+            {
+                TempData["Hint"] = $"Hint: първата цифра е {game.SecretCode[0]}";
+            }
+
+            await _db.SaveChangesAsync();
+
+            return RedirectToAction("Play", new { id = game.Id });
         }
 
         [AllowAnonymous]

@@ -1,11 +1,18 @@
 ﻿@model Bletchley2._0.Models.Game
 @{
     ViewData["Title"] = "Play Mastermind";
+
     var guesses = ViewBag.Guesses as List<Bletchley2._0.Models.Guess> ?? new List<Bletchley2._0.Models.Guess>();
     var secretNums = Model.SecretCode.Split(' ').Select(int.Parse).ToList();
+
     int attemptsLeft = 13 - Model.Attempts;
     int progressPercent = Model.Attempts * 100 / 13;
     string progressColor = attemptsLeft <= 3 ? "bg-danger" : attemptsLeft <= 6 ? "bg-warning" : "bg-success";
+
+    int totalPoints = ViewBag.TotalPoints is int tp ? tp : 0;
+    int hintCost = ViewBag.HintCost is int hc ? hc : 30;
+    bool canUseHint = ViewBag.CanUseHint is bool cuh && cuh;
+    int pointsNeeded = Math.Max(0, hintCost - totalPoints);
 }
 
 <style>
@@ -94,6 +101,47 @@
         border-radius: 20px;
         font-weight: bold;
     }
+
+    .hint-box {
+        margin-top: 15px;
+        padding: 16px;
+        background-color: #1a1a1b;
+        border: 1px solid #7d3cff;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .hint-button {
+        background-color: #7d3cff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        padding: 10px 18px;
+        width: 100%;
+    }
+
+        .hint-button:hover {
+            background-color: #9b5cff;
+            color: white;
+        }
+
+        .hint-button.disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+    .points-text {
+        color: #cfcfcf;
+        margin-bottom: 10px;
+    }
+
+    .small-muted {
+        color: #818384;
+        font-size: 0.9rem;
+        margin-top: 8px;
+        margin-bottom: 0;
+    }
 </style>
 
 <div class="container py-4">
@@ -105,6 +153,27 @@
                 <span class="attempts-badge">@Model.Attempts / 13</span>
             </div>
 
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert mb-3" style="background:#538d4e;color:white;border:none;border-radius:8px;">
+                    ✅ @TempData["Success"]
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert mb-3" style="background:#b59f3b;color:white;border:none;border-radius:8px;">
+                    ⚠️ @TempData["Error"]
+                </div>
+            }
+
+            @if (TempData["Hint"] != null)
+            {
+                <div class="alert mb-3" style="background:#7d3cff;color:white;border:none;border-radius:8px;">
+                    💡 @TempData["Hint"]
+                </div>
+            }
+
             @if (Model.IsCompleted)
             {
                 if (Model.IsWon)
@@ -112,7 +181,8 @@
                     <div class="alert text-center mb-4" style="background:#538d4e;color:white;border:none;border-radius:12px;">
                         <h4 class="mb-1">🎉 Позна кода!</h4>
                         <p class="mb-1">Решен за <strong>@Model.Attempts</strong> опита</p>
-                        <p class="mb-0 fs-5">Точки: <strong>@Model.Score</strong></p>
+                        <p class="mb-0 fs-5">Точки от играта: <strong>@Model.Score</strong></p>
+                        <p class="mb-0 fs-6">Общо точки: <strong>@totalPoints</strong></p>
                     </div>
                 }
                 else
@@ -141,18 +211,14 @@
                     </div>
                 </div>
 
-                @if (TempData["Error"] != null)
-                {
-                    <div class="alert mb-3" style="background:#b59f3b;color:white;border:none;border-radius:8px;">
-                        ⚠️ @TempData["Error"]
-                    </div>
-                }
-
                 <div class="card-dark p-4 mb-4">
                     <p style="color:#818384;" class="mb-3 small">Пиши цифрите — интервалите се добавят автоматично</p>
-                    <form method="post" action="/Games/SubmitGuess">
+
+                    <form method="post" asp-controller="Games" asp-action="SubmitGuess">
                         @Html.AntiForgeryToken()
+
                         <input type="hidden" name="gameId" value="@Model.Id" />
+
                         <div class="mb-3">
                             <input type="text"
                                    id="guessInput"
@@ -164,10 +230,38 @@
                                    autofocus
                                    required />
                         </div>
-                        <button type="submit" class="btn btn-green btn-lg w-100 py-2">
+
+                        <button type="submit" id="submitGuessButton" class="btn btn-green btn-lg w-100 py-2">
                             🔍 ПОЗНАЙ
                         </button>
                     </form>
+
+                    <div class="hint-box">
+                        <p class="points-text">
+                            💎 Твоите точки: <strong>@totalPoints</strong>
+                        </p>
+
+                        @if (canUseHint)
+                        {
+                            <form method="post" asp-controller="Games" asp-action="UseHint" asp-route-id="@Model.Id">
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit" class="hint-button">
+                                    💡 Използвай Hint (-@hintCost точки)
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button class="hint-button disabled" disabled>
+                                💡 Hint заключен
+                            </button>
+
+                            <p class="small-muted">
+                                Нужни са още @pointsNeeded точки за hint.
+                            </p>
+                        }
+                    </div>
                 </div>
             }
 
@@ -176,10 +270,12 @@
                     <div class="tile tile-green" style="width:28px;height:28px;font-size:.8rem;">■</div>
                     <span style="color:#818384;font-size:.85rem;">Точна позиция</span>
                 </div>
+
                 <div class="d-flex align-items-center gap-1">
                     <div class="tile tile-yellow" style="width:28px;height:28px;font-size:.8rem;">■</div>
                     <span style="color:#818384;font-size:.85rem;">Грешна позиция</span>
                 </div>
+
                 <div class="d-flex align-items-center gap-1">
                     <div class="tile tile-red" style="width:28px;height:28px;font-size:.8rem;">■</div>
                     <span style="color:#818384;font-size:.85rem;">Не е в кода</span>
@@ -189,10 +285,12 @@
             @foreach (var g in guesses.OrderBy(x => x.AttemptNumber))
             {
                 var gNums = g.GuessCode.Split(' ').Select(int.Parse).ToList();
+
                 <div class="mb-1">
                     @for (int i = 0; i < 4; i++)
                     {
                         string tileClass;
+
                         if (gNums[i] == secretNums[i])
                         {
                             tileClass = "tile-green";
@@ -205,6 +303,7 @@
                         {
                             tileClass = "tile-red";
                         }
+
                         <div class="tile @tileClass">@gNums[i]</div>
                     }
                 </div>
@@ -226,36 +325,30 @@
 
 <script>
     const input = document.getElementById('guessInput');
+
     if (input) {
         input.addEventListener('input', function () {
-            // Запази позицията на курсора
-            let pos = this.selectionStart;
-
-            // Вземи само цифрите
             let digits = this.value.replace(/[^0-9]/g, '');
 
-            // Ограничи до 4 цифри
             if (digits.length > 4) {
                 digits = digits.substring(0, 4);
             }
 
-            // Добави интервал между цифрите автоматично
             let formatted = digits.split('').join(' ');
             this.value = formatted;
 
-            // Ако са въведени 4 цифри — фокусирай бутона
             if (digits.length === 4) {
-                document.querySelector('.btn-green').focus();
+                const submitButton = document.getElementById('submitGuessButton');
+
+                if (submitButton) {
+                    submitButton.focus();
+                }
             }
         });
 
-        // Enter = submit
         input.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                this.closest('form').submit();
-            }
-            // Блокирай всичко освен цифри, backspace, delete, стрелки
-            const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+            const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+
             if (!allowed.includes(e.key) && !/^[0-9]$/.test(e.key)) {
                 e.preventDefault();
             }
